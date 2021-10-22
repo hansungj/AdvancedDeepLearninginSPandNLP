@@ -12,36 +12,43 @@ cfg = __C
 # --------------------------------------------------------------------------- #
 # general options
 # --------------------------------------------------------------------------- #
-__C.train = False
+__C.train = True
 
 __C.EXP_NAME = '<fill-with-filename>'
-__C.GPUS = '0'
+__C.GPUS = '4'
 
-__C.SNAPSHOT_FILE = './exp_clevr/pytorch_ckpt/%s/%04d.ckpt'
+__C.SNAPSHOT_FILE = './exp_gqa/pytorch_ckpt_7/%s/%04d.ckpt'
 
-__C.VOCAB_QUESTION_FILE = './exp_clevr/data/vocabulary_clevr.txt'
-__C.VOCAB_ANSWER_FILE = './exp_clevr/data/answers_clevr.txt'
-__C.IMDB_FILE = './exp_clevr/data/imdb/imdb_%s.npy'
-__C.IMAGE_DIR = './exp_clevr/clevr_dataset/images'
-__C.SPATIAL_FEATURE_DIR = './exp_clevr/data/features/spatial'
+__C.VOCAB_QUESTION_FILE = './exp_gqa/data/vocabulary_gqa.txt'
+__C.VOCAB_ANSWER_FILE = './exp_gqa/data/answers_gqa.txt'
+__C.IMDB_FILE = '/mount/studenten/arbeitsdaten-studenten1/advanced_ml/sgg_vqa_je/data/questions/%s_questions.json'
+__C.IMAGE_DIR = './exp_gqa/gqa_dataset/images'
+__C.SPATIAL_FEATURE_DIR = '/mount/studenten/arbeitsdaten-studenten1/advanced_ml/sgg_vqa_je/data/spatial'
+__C.OBJECTS_FEATURE_DIR = '/mount/studenten/arbeitsdaten-studenten1/advanced_ml/sgg_vqa_je/data/objects'
 
-__C.FEAT_TYPE = 'spatial'  # 'spatial' only, for now
+# __C.USE_SPATIAL_FEATURE = False
+__C.FEAT_TYPE = 'objects'  # 'spatial', 'objects' or 'scene_graph' 
 
-__C.INIT_WRD_EMB_FROM_FILE = False
-__C.WRD_EMB_INIT_FILE = ''
+# options for "perfect-sight training with ground-truth names & attrs"
+__C.SCENE_GRAPH_FILE = '/mount/studenten/arbeitsdaten-studenten1/advanced_ml/sgg_vqa_je/data/sceneGraphs/%s_sceneGraphs.json'  # NoQA
+__C.VOCAB_NAME_FILE = './exp_gqa/data/name_gqa.txt'
+__C.VOCAB_ATTR_FILE = './exp_gqa/data/attr_gqa.txt'
+
+__C.INIT_WRD_EMB_FROM_FILE = True
+__C.WRD_EMB_INIT_FILE = './exp_gqa/data/gloves_gqa_no_pad.npy'
 
 # --------------------------------------------------------------------------- #
 # model options
 # --------------------------------------------------------------------------- #
-__C.H_FEAT = 14
-__C.W_FEAT = 14
-__C.D_FEAT = 1152  # 1024+128
-__C.T_ENCODER = 45
+__C.H_FEAT = 1
+__C.W_FEAT = 100  # the maximum number of objects
+__C.D_FEAT = 2112  # 2048+64
+__C.T_ENCODER = 30
 __C.ADD_POS_ENC = True
-__C.PE_DIM = 128
+__C.PE_DIM = 64
 __C.PE_SCALE = 1.
 
-__C.MSG_ITER_NUM = 4
+__C.MSG_ITER_NUM = 8
 
 __C.STEM_NORMALIZE = True
 __C.STEM_LINEAR = True
@@ -57,7 +64,38 @@ __C.CTX_DIM = 512
 __C.OUT_QUESTION_MUL = True
 __C.OUT_CLASSIFIER_DIM = 512
 
-__C.USE_EMA = True
+
+#modified------------------------------------------------------------------
+__C.CONCEPT_VOCABULARY = True
+__C.CPT_EMB_DIM = 300 # make sure that this is compatible with glove name 
+__C.CPT_EMB_INIT_FILE = './exp_gqa/data/concept_300d.npy' # this should be the file for the concept vocabulary - quesiton encoder , './exp_gqa/data/concept_tensor.300d.npy'
+__C.INIT_CPT_EMB_FROM_FILE = False
+__C.NUM_CPT = 78
+__C.LCGN_CV_MODE = 'gate' # in ['concat', 'gate', 'none']
+__C.CPT_EMB_FIXED = False
+__C.CPT_SECTIONS_INIT_FILE = './exp_gqa/data/concept_sections.300d.npy'
+
+__C.NON_LINEAR_STEM = False
+__C.NON_LINEAR_STEM_NUM_LAYERS = 2 
+
+
+__C.CPT_TYPE = 'RCDI' # in[None, 'PD', 'RC'] # this restricts the model to only communicate through a probbailty distribution 
+__C.ENC_TYPE = 'enc-dec' # in ['enc-dec' or 'enc']
+__C.CPT_ATTN_GATE = True # here we decide if we allow for "non concept probabilty weighting" to apply
+__C.RETURN_ATTN = False
+__C.ONLY_CPT_OUT = False
+__C.CPT_NON_LINEAR = False
+__C.CPT_NON_LINEAR_TYPE = 'RELU'
+__C.CPT_NON_LINEAR_PROJECTION = False
+__C.ADD_LAYER_NORM = True
+__C.DIFF_SINGLE_HOP = False
+__C.DIFF_SINGLE_HOP_TYPE = 'CMD' # IN ['concat', 'cmd']
+__C.SOFTMAX_TYPE = 'softmax'
+__C.INPUT_NUM_LAYERS = 1
+
+#modified------------------------------------------------------------------
+
+__C.USE_EMA = False
 __C.EMA_DECAY_RATE = 0.999
 
 # Dropouts
@@ -70,20 +108,11 @@ __C.outputDropout = 0.85
 
 __C.MASK_PADUNK_IN_LOGITS = True
 
-__C.BUILD_VQA = True
-__C.BUILD_REF = False
-
-# CLEVR-Ref configs
-__C.BBOX_IOU_THRESH = .5
-__C.IMG_H = 320  # size in loc
-__C.IMG_W = 480  # size in loc
-
 # --------------------------------------------------------------------------- #
 # training options
 # --------------------------------------------------------------------------- #
 __C.TRAIN = AttrDict()
-__C.TRAIN.SPLIT_VQA = 'train'
-__C.TRAIN.SPLIT_REF = 'locplus_train'
+__C.TRAIN.SPLIT_VQA = 'train_balanced'
 __C.TRAIN.BATCH_SIZE = 128
 __C.TRAIN.START_EPOCH = 0
 __C.TRAIN.LOSS_TYPE = 'softmax'
@@ -100,20 +129,19 @@ __C.TRAIN.EVAL_MAX_NUM = 0  # 0 means no limit
 # test options
 # --------------------------------------------------------------------------- #
 __C.TEST = AttrDict()
-__C.TEST.SPLIT_VQA = 'val'
-__C.TEST.SPLIT_REF = 'locplus_val'
+__C.TEST.SPLIT_VQA = 'val_balanced'
 __C.TEST.BATCH_SIZE = 128
 __C.TEST.EPOCH = -1  # Needs to be supplied
 __C.TEST.DUMP_PRED = False
-__C.TEST.RESULT_DIR = './exp_clevr/results/%s/%04d'
+__C.TEST.RESULT_DIR = './exp_gqa/results/%s/%04d'
 
 __C.TEST.NUM_VIS = 0
 __C.TEST.VIS_DIR_PREFIX = 'vis'
-__C.TEST.VIS_FILTER_EDGE = True
+__C.TEST.VIS_FILTER_EDGE = False
 __C.TEST.VIS_EDGE_SCALE = 1.
 __C.TEST.VIS_FINAL_REL_TH = .025
 __C.TEST.VIS_FINAL_ABS_TH = .025
-__C.TEST.VIS_MSG_TH = .1
+__C.TEST.VIS_MSG_TH = .2
 
 # --------------------------------------------------------------------------- #
 # post-processing configs after loading
